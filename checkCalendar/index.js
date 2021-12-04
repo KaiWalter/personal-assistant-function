@@ -21,7 +21,8 @@ module.exports = function(context, req) {
                 totals.push({
                     day: day,
                     total: 0,
-                    isBlocked: false
+                    isBlocked: false,
+                    id: ''
                 })
                 found = totals.find(e => e.day === day);
             }
@@ -30,6 +31,7 @@ module.exports = function(context, req) {
             if (e.isAllDay && e.subject === markerSubject) {
                 if (found) {
                     found.isBlocked = true;
+                    found.id = e.id;
                 }
             } else if (e.isAllDay && e.showAs !== 'free') { // ignore completely blocked days
             } else if (e.showAs !== 'free' && !e.isAllDay) { // only count busy days
@@ -47,7 +49,7 @@ module.exports = function(context, req) {
         if (e.total > threshold && !e.isBlocked) {
             creates.push({ day: e.day, event: markerSubject });
         } else if (e.isBlocked) {
-            deletes.push({ day: e.day, event: markerSubject });
+            deletes.push({ day: e.day, id: e.id });
         }
     });
 
