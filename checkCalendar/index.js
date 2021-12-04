@@ -1,15 +1,37 @@
+Date.prototype.addDays = function(days) {
+    const date = new Date(this.valueOf());
+    date.setDate(date.getDate() + days);
+    return date;
+};
+
 // expects a list of events in the body coming from Microsoft Graph me/calendar/{calendarId}/events
-
 module.exports = function(context, req) {
-    let totals = [];
-    let creates = [];
-    let deletes = [];
-
     const threshold = 300; // 5 hours
     const markerSubject = 'PA-BLOCKER';
 
-    // go through each event
+    // explode events spanning multiple days
+    let events = [];
     req.body.forEach(e => {
+        if (e.isAllDay && e.start.substring(0, 10) < e.end.substring(0, 10)) {
+            var start = new Date(e.start);
+            var end = new Date(e.end);
+            var day = start;
+            while (day < end) {
+                eCopy = e;
+                eCopy.start = day.toISOString();
+                eCopy.end = day.toISOString();
+                day = day.addDays(1);
+                events.push(eCopy);
+            }
+        } else {
+            events.push(e);
+        }
+    });
+
+    // go through each event and total duration
+    let totals = [];
+
+    events.forEach(e => {
         var start = new Date(e.start);
         var end = new Date(e.end);
 
@@ -22,6 +44,7 @@ module.exports = function(context, req) {
                 totals.push({
                     day: day,
                     total: 0,
+                    totalBlocks: 0,
                     isBlocked: false,
                     id: ''
                 })
@@ -32,6 +55,7 @@ module.exports = function(context, req) {
             if (e.isAllDay && e.subject === markerSubject) {
                 if (entry) {
                     entry.isBlocked = true;
+                    entry.totalBlocks++;
                     entry.id = e.id;
                 }
             } else if (e.isAllDay && e.showAs !== 'free') { // ignore completely blocked days
@@ -46,11 +70,19 @@ module.exports = function(context, req) {
 
     });
 
+    // determine when to create a blocker and when to remove it
+    let creates = [];
+    let deletes = [];
+
     totals.forEach(e => {
-        if (e.total > threshold && !e.isBlocked) { // create block when above threshold
-            creates.push({ day: e.day, event: markerSubject });
-        } else if (e.total < threshold && e.isBlocked) { // delete block when below threshold
-            deletes.push({ day: e.day, id: e.id });
+        if (e.isBlocked) {
+            if (e.total < threshold || e.totalBlocks > 1) { // delete block when below threshold or when redundant blocks
+                deletes.push({ day: e.day, id: e.id });
+            }
+        } else {
+            if (e.total > threshold) { // create block when above threshold
+                creates.push({ day: e.day, event: markerSubject });
+            }
         }
     });
 
