@@ -6,7 +6,7 @@ module.exports = function(context, req) {
     let deletes = [];
 
     const threshold = 300; // 5 hours
-    const markerSubject = '60% full';
+    const markerSubject = 'PA-BLOCKER';
 
     req.body.forEach(e => {
         var start = new Date(e.start);
