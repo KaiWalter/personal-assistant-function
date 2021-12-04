@@ -8,6 +8,7 @@ module.exports = function(context, req) {
     const threshold = 300; // 5 hours
     const markerSubject = 'PA-BLOCKER';
 
+    // go through each event
     req.body.forEach(e => {
         var start = new Date(e.start);
         var end = new Date(e.end);
@@ -16,29 +17,29 @@ module.exports = function(context, req) {
 
             // create aggregation entry
             var day = start.toISOString().substring(0, 10);
-            var found = totals.find(e => e.day === day);
-            if (!found) {
+            var entry = totals.find(e => e.day === day);
+            if (!entry) {
                 totals.push({
                     day: day,
                     total: 0,
                     isBlocked: false,
                     id: ''
                 })
-                found = totals.find(e => e.day === day);
+                entry = totals.find(e => e.day === day);
             }
 
             // capture already blocked days
             if (e.isAllDay && e.subject === markerSubject) {
-                if (found) {
-                    found.isBlocked = true;
-                    found.id = e.id;
+                if (entry) {
+                    entry.isBlocked = true;
+                    entry.id = e.id;
                 }
             } else if (e.isAllDay && e.showAs !== 'free') { // ignore completely blocked days
             } else if (e.showAs !== 'free' && !e.isAllDay) { // only count busy days
                 var duration = (end.getTime() - start.getTime()) / 60000; // minutes
 
-                if (found) {
-                    found.total += duration;
+                if (entry) {
+                    entry.total += duration;
                 }
             }
         }
@@ -46,9 +47,9 @@ module.exports = function(context, req) {
     });
 
     totals.forEach(e => {
-        if (e.total > threshold && !e.isBlocked) {
+        if (e.total > threshold && !e.isBlocked) { // create block when above threshold
             creates.push({ day: e.day, event: markerSubject });
-        } else if (e.isBlocked) {
+        } else if (e.total < threshold && e.isBlocked) { // delete block when below threshold
             deletes.push({ day: e.day, id: e.id });
         }
     });
