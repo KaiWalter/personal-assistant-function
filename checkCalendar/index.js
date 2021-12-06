@@ -100,11 +100,7 @@ function calculateTotals(events, markerSubject) {
                     entry.isBlocked = true;
                     entry.totalBlocks++;
                 } else if (!e.isAllDay && e.showAs !== 'free') { // only count busy days
-<<<<<<< HEAD
                     calculateTotalMinutes(start, end, entry);
-=======
-                    entry = calculateTotalMinutes(start, end, entry);
->>>>>>> be6a274cf87f1b458045552dd46e18172bbe8bbb
                 }
             }
         }
@@ -116,26 +112,14 @@ function calculateTotals(events, markerSubject) {
 
 function calculateTotalMinutes(start, end, entry) {
 
-<<<<<<< HEAD
     // fill slots
     var startSlot = (start.getHours() * 4 + Math.floor(start.getMinutes() / 15)) - 1;
     var endSlot = (end.getHours() * 4 + Math.floor(end.getMinutes() / 15)) - 1;
 
-=======
-    var startSlot = (start.getHours() * 4 + Math.floor(start.getMinutes() / 15)) - 1;
-    var endSlot = (end.getHours() * 4 + Math.floor(end.getMinutes() / 15)) - 1;
-
-    // fill slots
->>>>>>> be6a274cf87f1b458045552dd46e18172bbe8bbb
     for (var i = startSlot; i < endSlot; i++) {
         entry.slots[i] = 1;
     }
 
     // count slots with value 1 and convert to minutes
     entry.total = entry.slots.reduce((a, b) => a + b, 0) * 15;
-<<<<<<< HEAD
-=======
-
-    return entry;
->>>>>>> be6a274cf87f1b458045552dd46e18172bbe8bbb
 }
