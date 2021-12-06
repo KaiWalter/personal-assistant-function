@@ -84,28 +84,23 @@ function calculateTotals(events, markerSubject) {
                     day: day,
                     total: 0,
                     totalBlocks: 0,
-                    isBlocked: false
+                    isBlocked: false,
+                    slots: new Array(24 * 4).fill(0) // 4 slots per hour
                 });
                 entry = totals.find(e => e.day === day);
             }
 
             // capture already blocked days
-            if (e.isAllDay && e.subject === markerSubject) {
-                if (entry) {
+            if (entry) {
+                if (e.isAllDay && e.subject === markerSubject) {
                     entry.isBlocked = true;
                     entry.totalBlocks++;
                     entry.id = e.id;
-                }
-            } else if (e.isAllDay && e.showAs !== 'free') { // count complete blocks
-                if (entry) {
+                } else if (e.isAllDay && e.showAs !== 'free') { // count complete blocks
                     entry.isBlocked = true;
                     entry.totalBlocks++;
-                }
-            } else if (e.showAs !== 'free' && !e.isAllDay) { // only count busy days
-                var duration = (end.getTime() - start.getTime()) / 60000; // minutes
-
-                if (entry) {
-                    entry.total += duration;
+                } else if (!e.isAllDay && e.showAs !== 'free') { // only count busy days
+                    entry = calculateTotalMinutes(start, end, entry);
                 }
             }
         }
@@ -113,4 +108,20 @@ function calculateTotals(events, markerSubject) {
     });
 
     return totals;
+}
+
+function calculateTotalMinutes(start, end, entry) {
+
+    var startSlot = (start.getHours() * 4 + Math.floor(start.getMinutes() / 15)) - 1;
+    var endSlot = (end.getHours() * 4 + Math.floor(end.getMinutes() / 15)) - 1;
+
+    // fill slots
+    for (var i = startSlot; i < endSlot; i++) {
+        entry.slots[i] = 1;
+    }
+
+    // count slots with value 1 and convert to minutes
+    entry.total = entry.slots.reduce((a, b) => a + b, 0) * 15;
+
+    return entry;
 }
