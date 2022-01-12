@@ -115,6 +115,9 @@ function calculateTotalMinutes(start, end, entry) {
     // fill slots
     var startSlot = (start.getHours() * 4 + Math.floor(start.getMinutes() / 15)) - 1;
     var endSlot = (end.getHours() * 4 + Math.floor(end.getMinutes() / 15)) - 1;
+    if (end.getMinutes() % 15 !== 0) { // fill to 15 minute slot
+        endSlot++;
+    }
 
     for (var i = startSlot; i < endSlot; i++) {
         entry.slots[i] = 1;
