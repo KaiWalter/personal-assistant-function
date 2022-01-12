@@ -99,7 +99,7 @@ function calculateTotals(events, markerSubject) {
                 } else if (e.isAllDay && e.showAs !== 'free') { // count complete blocks
                     entry.isBlocked = true;
                     entry.totalBlocks++;
-                } else if (!e.isAllDay && e.showAs !== 'free') { // only count busy days
+                } else if (!e.isAllDay && e.showAs !== 'free' && e.sensitivity !== 'private' ) { // only count busy days and non private meetings
                     calculateTotalMinutes(start, end, entry);
                 }
             }
