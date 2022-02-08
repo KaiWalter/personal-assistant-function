@@ -1,6 +1,6 @@
 // expects a list of events in the body coming from Microsoft Graph me/calendar/{calendarId}/events
 module.exports = function(context, req) {
-    const threshold = 300; // 5 hours
+    const threshold = parseInt(process.env.THRESHOLD) || 300; // 5 hours
     const markerSubject = 'AUTO-BLOCKER';
 
     // explode events spanning multiple days
